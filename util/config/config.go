@@ -1,9 +1,6 @@
 package config
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -30,8 +27,9 @@ type apiConfig struct {
 }
 
 type databaseConfig struct {
-	Host string
-	Port int
+	Host          string
+	Port          int
+	DefaultIndice string
 }
 
 type secrets struct {
@@ -52,6 +50,7 @@ func (cfg *Config) init() {
 	cfg.API.AllowedOrigins = viper.GetStringSlice("api.allowed_origins")
 	cfg.Database.Host = viper.GetString("database.host")
 	cfg.Database.Port = viper.GetInt("database.port")
+	cfg.Database.DefaultIndice = viper.GetString("database.default_indice")
 	cfg.Keys.CSRFKey = viper.GetString("secrets.csrf")
 	cfg.Keys.JWTSecret = viper.GetString("secrets.jwtsecret")
 }
@@ -65,7 +64,7 @@ func GetConfig() *Config {
 }
 
 // InitConfig sets up the config file
-func InitConfig() (*Config, error) {
+func InitConfig() *Config {
 
 	viper.SetConfigName("config")
 	viper.AddConfigPath(".")
@@ -73,8 +72,7 @@ func InitConfig() (*Config, error) {
 	viper.AutomaticEnv()
 
 	if err := viper.ReadInConfig(); err != nil {
-		fmt.Printf("%v", err)
-		os.Exit(1)
+		log.Fatal(err)
 	}
 
 	cfg := GetConfig()
@@ -84,7 +82,7 @@ func InitConfig() (*Config, error) {
 	formatter.FullTimestamp = true
 	log.SetFormatter(formatter)
 	log.SetLevel(cfg.LogLevel)
-	return cfg, nil
+	return cfg
 }
 
 func (cfg *Config) setLogLevel(loglevel string) {
