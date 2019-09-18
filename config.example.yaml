@@ -1,0 +1,21 @@
+version: 1.0.0
+log_level: info
+app_name: ListTheseServers
+app_short_name: LTS
+
+api:
+  port: 8080
+  allowed_methods:
+    - GET
+  allowed_headers:
+    - Content-Type
+  allowed_origins:
+    - \*
+
+database:
+  host: http://127.0.0.1
+  port: 9200
+  
+secrets:
+  csrf: some-secret-256-bit-key
+  jwtsecret: another-some-secret-256-bit-key
