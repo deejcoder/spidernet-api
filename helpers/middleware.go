@@ -12,7 +12,7 @@ import (
 
 	"github.com/deejcoder/spidernet-api/util/config"
 	"github.com/gorilla/csrf"
-	"github.com/olivere/elastic"
+	"github.com/olivere/elastic/v7"
 	log "github.com/sirupsen/logrus"
 )
 
