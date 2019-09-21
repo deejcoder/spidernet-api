@@ -50,9 +50,9 @@ Spidernet is a collection of searchable servers from across the world. It also m
     - pinger.go
 ```
 
-* API will contain RESTful services provided to the user through the HTTP protocol.
-* Storage will provide database services to the API  and workers
-* Tests will be the place where I perform tests
-* Workers will provide workers which will be executed in different threads, aside of the API. These workers may in the future be distributed using Redis to multiple processes within the same host, or across multiple hosts. In particular, this is where we will keep track of servers statuses and activity.
+* **API** will contain RESTful services provided to the user through the HTTP protocol.
+* **Storage** will provide database services to the **API**  and **workers**
+* **Tests** will be the place where I perform tests
+* **Workers** will provide workers which will be executed in different threads, aside of the **API**. These workers may in the future be distributed using Redis to multiple processes within the same host, or across multiple hosts. In particular, this is where we will keep track of servers statuses and activity.
 
 
