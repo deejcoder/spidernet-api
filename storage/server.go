@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"strings"
 	"time"
 )
 
@@ -13,4 +14,19 @@ type Server struct {
 	Tags         []string  `json:"tags"`
 	LastModified time.Time `json:"last_modified"`
 	DateAdded    time.Time `json:"date_added"`
+}
+
+func (instance PostgresInstance) CreateServer(host string, nick string, tags []string) error {
+
+	tagsString := strings.Join(tags, ",")
+	_, err := instance.client.Query(`
+		INSERT INTO servers 
+		(addr, nick, tags) 
+		VALUES ($1, $2, $3)
+	`, host, nick, tagsString)
+
+	if err != nil {
+		return err
+	}
+	return nil
 }

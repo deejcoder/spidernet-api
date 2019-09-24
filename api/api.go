@@ -50,14 +50,13 @@ func Start(ctx context.Context) {
 	conf := config.GetConfig()
 
 	instance := storage.NewPostgresInstance()
-	db, err := instance.Connect()
-	if err != nil {
+	if err := instance.Connect(); err != nil {
 		log.Fatal(err)
 	}
 
 	appContext := helpers.AppContext{
-		PostgresClient: db,
-		Config:         conf,
+		PostgresInstance: instance,
+		Config:           conf,
 	}
 
 	server := configure(&appContext)

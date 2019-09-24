@@ -16,13 +16,11 @@ var migrateCommand = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 
 		instance := storage.NewPostgresInstance()
-
-		db, err := instance.Connect()
-		if err != nil {
+		if err := instance.Connect(); err != nil {
 			log.Fatal(err)
 		}
 
-		if err := instance.Migrate(db); err != nil {
+		if err := instance.Migrate(); err != nil {
 			log.Fatal(err)
 		}
 		return nil

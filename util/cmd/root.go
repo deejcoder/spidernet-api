@@ -25,5 +25,5 @@ func Execute() {
 }
 
 func init() {
-	config.InitConfig()
+	config.InitConfig(".")
 }

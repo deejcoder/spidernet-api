@@ -73,10 +73,10 @@ func GetConfig() *Config {
 }
 
 // InitConfig sets up the config file
-func InitConfig() *Config {
+func InitConfig(path string) *Config {
 
 	viper.SetConfigName("config")
-	viper.AddConfigPath(".")
+	viper.AddConfigPath(path)
 	viper.SetConfigType("yaml")
 	viper.AutomaticEnv()
 

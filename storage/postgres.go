@@ -11,14 +11,16 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
-type PostgresInstance struct{}
+type PostgresInstance struct {
+	client *sql.DB
+}
 
-func NewPostgresInstance() PostgresInstance {
-	return PostgresInstance{}
+func NewPostgresInstance() *PostgresInstance {
+	return &PostgresInstance{}
 }
 
 // Connect connects to a postgres database
-func (instance PostgresInstance) Connect() (*sql.DB, error) {
+func (instance *PostgresInstance) Connect() error {
 	// build connection string
 	conf := config.GetConfig()
 	connectionString := fmt.Sprintf(
@@ -32,20 +34,21 @@ func (instance PostgresInstance) Connect() (*sql.DB, error) {
 
 	db, err := sql.Open("postgres", connectionString)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// test connection
 	if err = db.Ping(); err != nil {
-		return nil, err
+		return err
 	}
 
-	return db, nil
+	instance.client = db
+	return nil
 }
 
 // Migrate checks if there are any postgres changes, updates if so
-func (instance PostgresInstance) Migrate(db *sql.DB) error {
-	driver, err := postgres.WithInstance(db, &postgres.Config{})
+func (instance *PostgresInstance) Migrate() error {
+	driver, err := postgres.WithInstance(instance.client, &postgres.Config{})
 	if err != nil {
 		return err
 	}

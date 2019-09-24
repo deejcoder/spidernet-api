@@ -7,21 +7,20 @@ package helpers
 
 import (
 	"context"
-	"database/sql"
 	"net/http"
 	"time"
 
+	"github.com/deejcoder/spidernet-api/storage"
 	"github.com/deejcoder/spidernet-api/util/config"
 	"github.com/gorilla/csrf"
-	"github.com/olivere/elastic/v7"
 	log "github.com/sirupsen/logrus"
 )
 
 // AppContext allows access to shared app data within handlers
 type AppContext struct {
-	ElasticClient  *elastic.Client
-	PostgresClient *sql.DB
-	Config         *config.Config
+	ElasticInstance  *storage.ElasticInstance
+	PostgresInstance *storage.PostgresInstance
+	Config           *config.Config
 }
 
 type key struct{}
