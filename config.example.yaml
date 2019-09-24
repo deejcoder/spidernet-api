@@ -4,18 +4,23 @@ app_name: ListTheseServers
 app_short_name: LTS
 
 api:
+  usingHttps: false
   port: 8080
   allowed_methods:
     - GET
+    - POST
   allowed_headers:
     - Content-Type
   allowed_origins:
     - \*
 
 database:
-  host: http://127.0.0.1
-  port: 9200
+  host: 127.0.0.1:5432
+  user: spidernet
+  password: spidernet
+  database: spidernet
+  sslmode: disable
   
 secrets:
-  csrf: some-secret-256-bit-key
-  jwtsecret: another-some-secret-256-bit-key
+  csrf: some-generated-256-bit-secret
+  jwtsecret: some-generated-256-bit-secret

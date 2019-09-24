@@ -9,8 +9,8 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "LTS",
-	Short: "LTS provides a RESTful service to manage and view a collection of servers.",
+	Use:   "spidernet",
+	Short: "spidernet provides a RESTful service to manage and view a collection of servers.",
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Usage()
 	},

@@ -47,11 +47,17 @@ func configure(ac *helpers.AppContext) *http.Server {
 
 // Start starts the webserver, terminates on request
 func Start(ctx context.Context) {
+	conf := config.GetConfig()
 
-	db := storage.Connect()
+	instance := storage.NewPostgresInstance()
+	db, err := instance.Connect()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	appContext := helpers.AppContext{
-		Db:     db,
-		Config: config.GetConfig(),
+		PostgresClient: db,
+		Config:         conf,
 	}
 
 	server := configure(&appContext)

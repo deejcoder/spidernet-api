@@ -7,6 +7,7 @@ package helpers
 
 import (
 	"context"
+	"database/sql"
 	"net/http"
 	"time"
 
@@ -18,8 +19,9 @@ import (
 
 // AppContext allows access to shared app data within handlers
 type AppContext struct {
-	Db     *elastic.Client
-	Config *config.Config
+	ElasticClient  *elastic.Client
+	PostgresClient *sql.DB
+	Config         *config.Config
 }
 
 type key struct{}

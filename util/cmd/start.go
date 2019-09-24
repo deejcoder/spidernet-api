@@ -12,10 +12,10 @@ import (
 )
 
 func init() {
-	rootCmd.AddCommand(serveCommand)
+	rootCmd.AddCommand(startCommand)
 }
 
-var serveCommand = &cobra.Command{
+var startCommand = &cobra.Command{
 	Use:   "start",
 	Short: "starts the service",
 	RunE: func(cmd *cobra.Command, args []string) error {

@@ -27,9 +27,12 @@ type apiConfig struct {
 }
 
 type databaseConfig struct {
-	Host          string
-	Port          int
-	DefaultIndice string
+	Host     string
+	Port     int
+	Db       string
+	User     string
+	Password string
+	SSLMode  string
 }
 
 type secrets struct {
@@ -43,14 +46,20 @@ func (cfg *Config) init() {
 	cfg.setLogLevel(viper.GetString("log_level"))
 	cfg.AppName = viper.GetString("app_name")
 	cfg.AppShortName = viper.GetString("app_short_name")
+
 	cfg.API.UsingHttps = viper.GetBool("api.usingHttps")
 	cfg.API.Port = viper.GetInt("api.port")
 	cfg.API.AllowedMethods = viper.GetStringSlice("api.allowed_methods")
 	cfg.API.AllowedHeaders = viper.GetStringSlice("api.allowed_headers")
 	cfg.API.AllowedOrigins = viper.GetStringSlice("api.allowed_origins")
+
 	cfg.Database.Host = viper.GetString("database.host")
 	cfg.Database.Port = viper.GetInt("database.port")
-	cfg.Database.DefaultIndice = viper.GetString("database.default_indice")
+	cfg.Database.Db = viper.GetString("database.db")
+	cfg.Database.User = viper.GetString("database.user")
+	cfg.Database.Password = viper.GetString("database.password")
+	cfg.Database.SSLMode = viper.GetString("database.sslmode")
+
 	cfg.Keys.CSRFKey = viper.GetString("secrets.csrf")
 	cfg.Keys.JWTSecret = viper.GetString("secrets.jwtsecret")
 }
