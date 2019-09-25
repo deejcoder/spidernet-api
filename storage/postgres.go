@@ -9,10 +9,11 @@ import (
 	"github.com/golang-migrate/migrate/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	sb "github.com/huandu/go-sqlbuilder"
 )
 
 type PostgresInstance struct {
-	client *sql.DB
+	db *sql.DB
 }
 
 func NewPostgresInstance() *PostgresInstance {
@@ -42,13 +43,13 @@ func (instance *PostgresInstance) Connect() error {
 		return err
 	}
 
-	instance.client = db
+	instance.db = db
 	return nil
 }
 
 // Migrate checks if there are any postgres changes, updates if so
 func (instance *PostgresInstance) Migrate() error {
-	driver, err := postgres.WithInstance(instance.client, &postgres.Config{})
+	driver, err := postgres.WithInstance(instance.db, &postgres.Config{})
 	if err != nil {
 		return err
 	}
@@ -59,4 +60,23 @@ func (instance *PostgresInstance) Migrate() error {
 	}
 	m.Steps(2)
 	return nil
+}
+
+// Update updates an existing tuple; this is a wrapper for go-sqlbuilder
+func (instance *PostgresInstance) Update(table string, s *sb.Struct, value interface{}) error {
+	ub := s.Update(table, value)
+	sql, args := ub.BuildWithFlavor(sb.PostgreSQL)
+	_, err := instance.db.Query(sql, args)
+	return err
+}
+
+// Delete deletes an existing tuple WHERE key is value; this is a wrapper for go-sqlbuilder
+func (instance *PostgresInstance) Delete(table string, key string, value interface{}) error {
+	db := sb.PostgreSQL.NewDeleteBuilder()
+	db.DeleteFrom(table)
+	db.Where(db.Equal(key, value))
+	sql, args := db.Build()
+
+	_, err := instance.db.Query(sql, args...)
+	return err
 }
