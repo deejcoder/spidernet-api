@@ -1,4 +1,4 @@
-package storage
+package client
 
 import (
 	"database/sql"
@@ -13,7 +13,7 @@ import (
 )
 
 type PostgresInstance struct {
-	db *sql.DB
+	Db *sql.DB
 }
 
 func NewPostgresInstance() *PostgresInstance {
@@ -43,18 +43,18 @@ func (instance *PostgresInstance) Connect() error {
 		return err
 	}
 
-	instance.db = db
+	instance.Db = db
 	return nil
 }
 
 // Migrate checks if there are any postgres changes, updates if so
 func (instance *PostgresInstance) Migrate() error {
-	driver, err := postgres.WithInstance(instance.db, &postgres.Config{})
+	driver, err := postgres.WithInstance(instance.Db, &postgres.Config{})
 	if err != nil {
 		return err
 	}
 
-	m, err := migrate.NewWithDatabaseInstance("file://storage/migrations", "postgres", driver)
+	m, err := migrate.NewWithDatabaseInstance("file://storage/client/migrations", "postgres", driver)
 	if err != nil {
 		return err
 	}
@@ -66,7 +66,7 @@ func (instance *PostgresInstance) Migrate() error {
 func (instance *PostgresInstance) Update(table string, s *sb.Struct, value interface{}) error {
 	ub := s.Update(table, value)
 	sql, args := ub.BuildWithFlavor(sb.PostgreSQL)
-	_, err := instance.db.Query(sql, args)
+	_, err := instance.Db.Query(sql, args)
 	return err
 }
 
@@ -77,6 +77,6 @@ func (instance *PostgresInstance) Delete(table string, key string, value interfa
 	db.Where(db.Equal(key, value))
 	sql, args := db.Build()
 
-	_, err := instance.db.Query(sql, args...)
+	_, err := instance.Db.Query(sql, args...)
 	return err
 }

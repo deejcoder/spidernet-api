@@ -1,4 +1,4 @@
-package storage
+package server
 
 import (
 	"fmt"
@@ -6,11 +6,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/deejcoder/spidernet-api/storage/client"
 	"github.com/deejcoder/spidernet-api/util/config"
 	log "github.com/sirupsen/logrus"
 )
 
-func setup() (*config.Config, *PostgresInstance) {
+func setup() (*config.Config, *client.PostgresInstance) {
 	cfg := config.InitConfig("../")
 
 	// configure & connect to postgres
@@ -30,20 +31,8 @@ func TestServerOperations(t *testing.T) {
 	CreateServers(mgr)
 
 	// search the servers for two tags: community & forum, limit results between 1 & 2
-	servers, err := mgr.SearchServers("community forum", 1, 2)
-	if err != nil {
-		log.Fatal(err)
-	}
+	servers := mgr.SearchServers("community forum", 1, 2)
 	log.Info(servers)
-
-	if len(servers) != 2 {
-		log.Panic("Oh dear :( I should get two servers back!")
-	}
-
-	// delete server 0
-	if err := mgr.DeleteServer(servers[0].ID); err != nil {
-		log.Panic(err)
-	}
 
 }
 

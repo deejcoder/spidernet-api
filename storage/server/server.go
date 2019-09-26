@@ -1,16 +1,17 @@
-package storage
+package server
 
 import (
 	sql "database/sql"
 	"time"
 
+	client "github.com/deejcoder/spidernet-api/storage/client"
 	sb "github.com/huandu/go-sqlbuilder"
 	"github.com/lib/pq"
 	log "github.com/sirupsen/logrus"
 )
 
 type ServerManager struct {
-	client *PostgresInstance
+	client *client.PostgresInstance
 }
 
 type Server struct {
@@ -28,19 +29,21 @@ type Server struct {
 var serverStruct = sb.NewStruct(new(Server))
 
 // NewServerManager creates a new manager, to manage the server schema
-func NewServerManager(instance *PostgresInstance) *ServerManager {
+func NewServerManager(instance *client.PostgresInstance) *ServerManager {
 	return &ServerManager{instance}
 }
 
 func (mgr ServerManager) CreateServer(host string, tags []string) error {
-	ib := sb.PostgreSQL.NewInsertBuilder()
-	ib.InsertInto("servers")
-	ib.Cols("addr", "tags")
-	ib.Values(host, pq.Array(tags))
+	iq := sb.Build(`INSERT INTO servers (addr) VALUES ($?) RETURNING id`, host)
+	sql, args := iq.BuildWithFlavor(sb.PostgreSQL)
 
-	// execute
-	sql, args := ib.Build()
-	_, err := mgr.client.db.Query(sql, args...)
+	var id int
+	err := mgr.client.Db.QueryRow(sql, args...).Scan(&id)
+	if err != nil {
+		return err
+	}
+
+	err = mgr.AddServerTags(id, tags)
 	return err
 }
 
@@ -54,40 +57,37 @@ func (mgr ServerManager) UpdateServer(server *Server) error {
 	return err
 }
 
-// SearchServers matches the {term} with server tags, and returns back {size} tuples starting at {start}
-func (mgr ServerManager) SearchServers(term string, start int, size int) ([]Server, error) {
-	// build the query
-	searchb := sb.Build(
+func (mgr ServerManager) SearchServers(term string, offset int, size int) []Server {
+	search := sb.Build(
 		`
 			SELECT *
-			FROM servers s
-			WHERE s.tags && tsvector_to_array(to_tsvector($?))
-			ORDER BY s.votes_up + s.votes_down
+			FROM tags t
+			WHERE t.tag % $?
+			INNER JOIN server_tags st
+			ON t.id = st.tag_id
+			INNER JOIN servers s
+			ON s.id = st.server_id
 			LIMIT $?
 			OFFSET $?
-		`,
-		term, size, start,
+		`, term, size, offset,
 	)
 
-	// execute the query
-	sql, args := searchb.BuildWithFlavor(sb.PostgreSQL)
-	rows, err := mgr.client.db.Query(sql, args...)
+	sql, args := search.BuildWithFlavor(sb.PostgreSQL)
+	rows, err := mgr.client.Db.Query(sql, args...)
 	if err != nil {
-		return nil, err
+		log.Error(err)
+		return nil
 	}
 
-	// build array containing results
 	var servers []Server
 	for rows.Next() {
-
 		s := Server{}
 		err := rows.Scan(serverStruct.Addr(&s)...)
 		if err != nil {
-			log.Errorf("Excluded result from server search results, error=%s", err)
-			continue
+			log.Error(err)
 		}
 
 		servers = append(servers, s)
 	}
-	return servers, nil
+	return servers
 }
