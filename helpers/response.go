@@ -46,6 +46,7 @@ const (
 	ErrorValidationError = iota
 	ErrorInternalError   = iota
 	ErrorNotAuthorized   = iota
+	ErrorInvalidParam    = iota
 )
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary

@@ -77,7 +77,6 @@ func (mgr ServerManager) SearchServers(term string, start int, size int) ([]Serv
 	sql, args := qb.BuildWithFlavor(sb.PostgreSQL)
 	hits, err := mgr.client.Db.Query(sql, args...)
 
-	log.Info(sql)
 	if err != nil {
 		return servers, err
 	}
