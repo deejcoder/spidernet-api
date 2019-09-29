@@ -29,6 +29,12 @@ func TestServerOperations(t *testing.T) {
 	// we want to manage the servers with the postgres client
 	mgr := NewServerManager(psql)
 	CreateServers(mgr)
+	res, err := mgr.SearchServers("runecraft", 0, 10)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	log.Info(res)
 
 }
 

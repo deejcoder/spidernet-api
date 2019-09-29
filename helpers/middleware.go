@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/deejcoder/spidernet-api/storage"
+	"github.com/deejcoder/spidernet-api/storage/client"
 	"github.com/deejcoder/spidernet-api/util/config"
 	"github.com/gorilla/csrf"
 	log "github.com/sirupsen/logrus"
@@ -18,8 +18,7 @@ import (
 
 // AppContext allows access to shared app data within handlers
 type AppContext struct {
-	ElasticInstance  *storage.ElasticInstance
-	PostgresInstance *storage.PostgresInstance
+	PostgresInstance *client.PostgresInstance
 	Config           *config.Config
 }
 

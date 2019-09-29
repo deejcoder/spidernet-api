@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/deejcoder/spidernet-api/storage"
+	"github.com/deejcoder/spidernet-api/storage/client"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -15,7 +15,7 @@ var migrateCommand = &cobra.Command{
 	Short: "migrates the PostgreSQL database with changes in the migrations folder",
 	RunE: func(cmd *cobra.Command, args []string) error {
 
-		instance := storage.NewPostgresInstance()
+		instance := client.NewPostgresInstance()
 		if err := instance.Connect(); err != nil {
 			log.Fatal(err)
 		}

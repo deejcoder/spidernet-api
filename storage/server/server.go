@@ -6,7 +6,7 @@ import (
 
 	client "github.com/deejcoder/spidernet-api/storage/client"
 	sb "github.com/huandu/go-sqlbuilder"
-	"github.com/lib/pq"
+	log "github.com/sirupsen/logrus"
 )
 
 type ServerManager struct {
@@ -20,7 +20,6 @@ type Server struct {
 	Nick         sql.NullString `db:"nick"`
 	VotesUp      string         `db:"votes_up"`
 	VotesDown    string         `db:"votes_down"`
-	Tags         pq.StringArray `db:"tags"`
 	LastModified time.Time      `db:"last_modified"`
 	DateAdded    time.Time      `db:"date_added"`
 }
@@ -55,4 +54,44 @@ func (mgr ServerManager) DeleteServer(id int) error {
 func (mgr ServerManager) UpdateServer(server *Server) error {
 	err := mgr.client.Update("servers", serverStruct, server)
 	return err
+}
+
+// SearchServers searches all servers for best matches against tags, and orders by most popular
+func (mgr ServerManager) SearchServers(term string, start int, size int) ([]Server, error) {
+	var servers []Server
+	qb := sb.Build(`
+		SELECT 
+			servers.*
+		FROM servers
+		INNER JOIN server_tags
+		ON server_tags.server_id = servers.id
+		INNER JOIN tags
+		ON tags.id = server_tags.tag_id
+		ORDER BY 
+			similarity(tags.tag, $0) DESC,
+			servers.votes_up + servers.votes_down DESC
+		OFFSET $1
+		LIMIT $2;
+	`, term, start, size)
+
+	sql, args := qb.BuildWithFlavor(sb.PostgreSQL)
+	hits, err := mgr.client.Db.Query(sql, args...)
+
+	log.Info(sql)
+	if err != nil {
+		return servers, err
+	}
+
+	defer hits.Close()
+	for hits.Next() {
+		server := Server{}
+		err := hits.Scan(serverStruct.Addr(&server)...)
+		if err != nil {
+			log.Error(err)
+			continue
+		}
+
+		servers = append(servers, server)
+	}
+	return servers, nil
 }

@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/deejcoder/spidernet-api/helpers"
-	"github.com/deejcoder/spidernet-api/storage"
+	"github.com/deejcoder/spidernet-api/storage/client"
 	"github.com/deejcoder/spidernet-api/util/config"
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/handlers"
@@ -49,7 +49,7 @@ func configure(ac *helpers.AppContext) *http.Server {
 func Start(ctx context.Context) {
 	conf := config.GetConfig()
 
-	instance := storage.NewPostgresInstance()
+	instance := client.NewPostgresInstance()
 	if err := instance.Connect(); err != nil {
 		log.Fatal(err)
 	}
