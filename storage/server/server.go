@@ -6,6 +6,7 @@ import (
 
 	client "github.com/deejcoder/spidernet-api/storage/client"
 	sb "github.com/huandu/go-sqlbuilder"
+	"github.com/lib/pq"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -14,14 +15,19 @@ type ServerManager struct {
 }
 
 type Server struct {
-	ID           int            `db:"id"`
-	Addr         string         `db:"addr"`
-	Port         sql.NullInt64  `db:"port"`
-	Nick         sql.NullString `db:"nick"`
-	VotesUp      string         `db:"votes_up"`
-	VotesDown    string         `db:"votes_down"`
-	LastModified time.Time      `db:"last_modified"`
-	DateAdded    time.Time      `db:"date_added"`
+	ID           int            `db:"id" json:"id"`
+	Addr         string         `db:"addr" json:"addr"`
+	Port         sql.NullInt64  `db:"port" json:"port"`
+	Nick         sql.NullString `db:"nick" json:"nick"`
+	VotesUp      string         `db:"votes_up" json:"votes_up"`
+	VotesDown    string         `db:"votes_down" json:"votes_down"`
+	LastModified time.Time      `db:"last_modified" json:"last_modified"`
+	DateAdded    time.Time      `db:"date_added" json:"date_added"`
+}
+
+type ServerWithTags struct {
+	Server Server   `json:"server"`
+	Tags   []string `db:"tags" json:"tags"`
 }
 
 var serverStruct = sb.NewStruct(new(Server))
@@ -57,23 +63,38 @@ func (mgr ServerManager) UpdateServer(server *Server) error {
 }
 
 // SearchServers searches all servers for best matches against tags, and orders by most popular
-func (mgr ServerManager) SearchServers(term string, start int, size int) ([]Server, error) {
-	var servers []Server
+func (mgr ServerManager) SearchServers(term string, start int, size int) ([]ServerWithTags, error) {
+	var servers []ServerWithTags
 	qb := sb.Build(`
-		SELECT 
-			servers.*
+		WITH 
+			get_server_tags AS (
+				SELECT server_id, tag
+				FROM tags
+				INNER JOIN server_tags
+				ON tags.id = server_tags.tag_id
+			),
+			tags_to_array AS (
+				SELECT server_id, ARRAY_AGG(tag) AS tags
+				FROM get_server_tags
+				GROUP BY server_id
+			)
+		
+		SELECT servers.*, tags_to_array.tags
 		FROM servers
 		INNER JOIN server_tags
 		ON server_tags.server_id = servers.id
 		INNER JOIN tags
 		ON tags.id = server_tags.tag_id
+		INNER JOIN tags_to_array
+		ON tags_to_array.server_id = servers.id
 		ORDER BY 
 			similarity(tags.tag, $0) DESC,
 			servers.votes_up + servers.votes_down DESC
 		OFFSET $1
-		LIMIT $2;
+		LIMIT $2
 	`, term, start, size)
 
+	// build the query
 	sql, args := qb.BuildWithFlavor(sb.PostgreSQL)
 	hits, err := mgr.client.Db.Query(sql, args...)
 
@@ -83,8 +104,14 @@ func (mgr ServerManager) SearchServers(term string, start int, size int) ([]Serv
 
 	defer hits.Close()
 	for hits.Next() {
-		server := Server{}
-		err := hits.Scan(serverStruct.Addr(&server)...)
+		// decode results as a server with tags attached
+		server := ServerWithTags{}
+
+		stct := append(
+			serverStruct.Addr(&server.Server),
+			(*pq.StringArray)(&server.Tags),
+		)
+		err := hits.Scan(stct...)
 		if err != nil {
 			log.Error(err)
 			continue
