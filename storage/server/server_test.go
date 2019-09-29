@@ -12,10 +12,10 @@ import (
 )
 
 func setup() (*config.Config, *client.PostgresInstance) {
-	cfg := config.InitConfig("../")
+	cfg := config.InitConfig("../../")
 
 	// configure & connect to postgres
-	psql := NewPostgresInstance()
+	psql := client.NewPostgresInstance()
 	if err := psql.Connect(); err != nil {
 		log.Fatal(err)
 	}
@@ -29,10 +29,6 @@ func TestServerOperations(t *testing.T) {
 	// we want to manage the servers with the postgres client
 	mgr := NewServerManager(psql)
 	CreateServers(mgr)
-
-	// search the servers for two tags: community & forum, limit results between 1 & 2
-	servers := mgr.SearchServers("community forum", 1, 2)
-	log.Info(servers)
 
 }
 
@@ -48,7 +44,7 @@ func CreateServers(mgr *ServerManager) {
 
 	for i := 0; i < 50; i++ {
 		// generate an ip
-		addr := fmt.Sprintf("122.158.3.%d", i)
+		addr := fmt.Sprintf("135.158.3.%d", i)
 
 		// randomly select two tags
 		index := rnd.Intn(len(tags)-1) + 1

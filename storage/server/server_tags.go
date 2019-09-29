@@ -1,69 +1,80 @@
+/* server_tags
+Tags are assoicated with servers.
+Contract: A tag will exist if a server exists
+If a server no longer exists, a tag must be removed
+*/
+
 package server
 
 import (
+	sql "database/sql"
+
 	sb "github.com/huandu/go-sqlbuilder"
 	log "github.com/sirupsen/logrus"
 )
 
-/*
-	AddServerTags creates many tags and assoicates them to a server,
-	this will be transformed into a transaction
-	where particular INSERTs will be forced using a fake UPDATE statement
-	to return the ID
-*/
-func (mgr ServerManager) AddServerTags(id int, tags []string) error {
+func (mgr ServerManager) CreateServerTags(sid int, tags []string) error {
+	tx, err := mgr.client.Db.Begin()
+	if err != nil {
+		return err
+	}
+
+	// add a tag to the transaction
 	for _, tag := range tags {
-		err := mgr.AddServerTag(id, tag)
-		if err != nil {
-			log.Warning(err)
+		log.Infof("Creating tag: %s", tag)
+		if err := mgr.CreateServerTag(tx, sid, tag); err != nil {
+			// log the error & cancel transaction
+			log.Fatal(err)
+			err := tx.Rollback()
+			return err
 		}
 	}
+
+	// commit the changes
+	err = tx.Commit()
+	return err
+}
+
+func (mgr ServerManager) CreateServerTag(tx *sql.Tx, sid int, tag string) error {
+	_, err := tx.Exec(`
+		INSERT INTO
+		tags (tag)
+		VALUES ($1)
+		ON CONFLICT (tag) DO NOTHING;
+	`, tag)
+
+	if err != nil {
+		log.Errorf("Error inserting new tag: %s", err)
+		return err
+	}
+
+	_, err = tx.Exec(`
+		WITH 
+		relations AS (
+			SELECT *, $1::INT AS add_to_server_id FROM tags
+			LEFT JOIN server_tags
+			ON $1::INT = server_tags.server_id
+			WHERE server_tags.server_id IS NULL AND tags.tag = $2
+		)
+
+		INSERT INTO server_tags
+		(server_id, tag_id)
+		(
+			SELECT add_to_server_id, id
+			FROM relations
+		)
+	`, sid, tag)
+	return err
+}
+
+func (mgr ServerManager) DeleteServerTags(sid int) error {
+	delb := sb.PostgreSQL.NewDeleteBuilder()
+	delb.DeleteFrom("server_tags")
+	delb.Where(delb.E("server_id", sid))
+	sql, args := delb.Build()
+
+	if _, err := mgr.client.Db.Query(sql, args...); err != nil {
+		return err
+	}
 	return nil
-}
-
-// AddServerTag assoicates a tag with a server
-func (mgr ServerManager) AddServerTag(id int, tag string) error {
-	err := mgr.CreateTag(tag)
-	if err != nil {
-		return err
-	}
-
-	tag_id, err := mgr.GetTagId(tag)
-	if err != nil {
-		return err
-	}
-
-	iq := sb.Build(`INSERT INTO server_tags (server_id, tag_id) VALUES ($?, $?) ON CONFLICT DO NOTHING`, id, tag_id)
-	sql, args := iq.BuildWithFlavor(sb.PostgreSQL)
-
-	_, err = mgr.client.Db.Query(sql, args...)
-	return err
-}
-
-// CreateTag creates a new tag if it doesn't already exist
-func (mgr ServerManager) CreateTag(tag string) error {
-	ib := sb.Build(`INSERT INTO tags (tag) VALUES ($?) ON CONFLICT DO NOTHING;`, tag)
-	sql, args := ib.BuildWithFlavor(sb.PostgreSQL)
-	_, err := mgr.client.Db.Query(sql, args...)
-	return err
-}
-
-// GetTagId returns the ID of a given tag
-func (mgr ServerManager) GetTagId(tag string) (int, error) {
-	selectb := sb.PostgreSQL.NewSelectBuilder()
-	selectb.Select("id")
-	selectb.From("tags")
-	selectb.Where(selectb.E("tag", tag))
-	selectb.Limit(1)
-
-	sql, args := selectb.Build()
-	rows, err := mgr.client.Db.Query(sql, args...)
-	if err != nil {
-		return 0, err
-	}
-
-	var tag_id int
-	rows.Next()
-	err = rows.Scan(&tag_id)
-	return tag_id, err
 }
