@@ -17,6 +17,7 @@ func configure(ac *helpers.AppContext) *http.Server {
 
 	config := config.GetConfig()
 
+	log.Info(config.API.AllowedOrigins)
 	cors := handlers.CORS(
 		handlers.AllowedOrigins(config.API.AllowedOrigins),
 		handlers.AllowedMethods(config.API.AllowedMethods),

@@ -21,7 +21,6 @@ func (mgr ServerManager) CreateServerTags(sid int, tags []string) error {
 
 	// add a tag to the transaction
 	for _, tag := range tags {
-		log.Infof("Creating tag: %s", tag)
 		if err := mgr.CreateServerTag(tx, sid, tag); err != nil {
 			// log the error & cancel transaction
 			log.Fatal(err)

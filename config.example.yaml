@@ -1,7 +1,7 @@
 version: 1.0.0
 log_level: info
-app_name: ListTheseServers
-app_short_name: LTS
+app_name: spidernet
+app_short_name: SN
 
 api:
   usingHttps: false
@@ -12,7 +12,7 @@ api:
   allowed_headers:
     - Content-Type
   allowed_origins:
-    - \*
+    - "*"
 
 database:
   host: 127.0.0.1:5432
@@ -22,5 +22,5 @@ database:
   sslmode: disable
   
 secrets:
-  csrf: some-generated-256-bit-secret
-  jwtsecret: some-generated-256-bit-secret
+  csrf: some-256-bit-secret-key
+  jwtsecret: another-256-bit-secret-key

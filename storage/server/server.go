@@ -64,7 +64,6 @@ func (mgr ServerManager) UpdateServer(server *Server) error {
 
 // SearchServers searches all servers for best matches against tags, and orders by most popular
 func (mgr ServerManager) SearchServers(term string, start int, size int) ([]ServerWithTags, error) {
-	var servers []ServerWithTags
 	qb := sb.Build(`
 		WITH 
 			get_server_tags AS (
@@ -99,12 +98,17 @@ func (mgr ServerManager) SearchServers(term string, start int, size int) ([]Serv
 	hits, err := mgr.client.Db.Query(sql, args...)
 
 	if err != nil {
-		return servers, err
+		return nil, err
 	}
 
 	defer hits.Close()
+	servers := mgr.DecodeServers(hits)
+	return servers, nil
+}
+
+func (mgr ServerManager) DecodeServers(hits *sql.Rows) []ServerWithTags {
+	var servers []ServerWithTags
 	for hits.Next() {
-		// decode results as a server with tags attached
 		server := ServerWithTags{}
 
 		stct := append(
@@ -119,5 +123,5 @@ func (mgr ServerManager) SearchServers(term string, start int, size int) ([]Serv
 
 		servers = append(servers, server)
 	}
-	return servers, nil
+	return servers
 }

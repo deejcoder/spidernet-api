@@ -66,7 +66,7 @@ func (instance *PostgresInstance) Migrate() error {
 func (instance *PostgresInstance) Update(table string, s *sb.Struct, value interface{}) error {
 	ub := s.Update(table, value)
 	sql, args := ub.BuildWithFlavor(sb.PostgreSQL)
-	_, err := instance.Db.Query(sql, args)
+	_, err := instance.Db.Query(sql, args...)
 	return err
 }
 
@@ -79,4 +79,21 @@ func (instance *PostgresInstance) Delete(table string, key string, value interfa
 
 	_, err := instance.Db.Query(sql, args...)
 	return err
+}
+
+func (instance *PostgresInstance) GetOne(table string, key string, value interface{}, dest interface{}) error {
+	selectb := sb.PostgreSQL.NewSelectBuilder()
+	selectb.Select("*")
+	selectb.From(table)
+	selectb.Where(selectb.E(key, value))
+	selectb.Limit(1)
+
+	sql, args := selectb.Build()
+	res := instance.Db.QueryRow(sql, args...)
+
+	err := res.Scan(&dest)
+	if err != nil {
+		return err
+	}
+	return nil
 }
