@@ -38,6 +38,7 @@ type databaseConfig struct {
 type secrets struct {
 	CSRFKey   string
 	JWTSecret string
+	ApiLogin  string
 }
 
 // init serializes YAML into a Config struct
@@ -55,13 +56,14 @@ func (cfg *Config) init() {
 
 	cfg.Database.Host = viper.GetString("database.host")
 	cfg.Database.Port = viper.GetInt("database.port")
-	cfg.Database.Db = viper.GetString("database.db")
+	cfg.Database.Db = viper.GetString("database.database")
 	cfg.Database.User = viper.GetString("database.user")
 	cfg.Database.Password = viper.GetString("database.password")
 	cfg.Database.SSLMode = viper.GetString("database.sslmode")
 
 	cfg.Keys.CSRFKey = viper.GetString("secrets.csrf")
 	cfg.Keys.JWTSecret = viper.GetString("secrets.jwtsecret")
+	cfg.Keys.ApiLogin = viper.GetString("secrets.api_login")
 }
 
 // GetConfig loads config data into a Config struct
