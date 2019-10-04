@@ -31,18 +31,19 @@ func (instance *PostgresInstance) Connect() error {
 		conf.Database.Password,
 		conf.Database.SSLMode,
 	)
-	logrus.Info(connStr)
+
 	db, err := gorm.Open("postgres", connStr)
 	if err != nil {
 		return err
 	}
 
+	// setup extensions, auto migrations etc.
+	instance.OnConnect()
 	instance.Db = db
-	instance.Setup()
 	return nil
 }
 
-func (instance *PostgresInstance) Setup() {
+func (instance *PostgresInstance) OnConnect() {
 	instance.Db.AutoMigrate(&Server{}, &Tag{})
 
 	// try add pg_trgm extension if it doesn't exist

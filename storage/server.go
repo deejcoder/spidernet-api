@@ -44,6 +44,31 @@ func (mgr ServerManager) CreateServer(host string, nick string) (Server, error) 
 	return server, nil
 }
 
+func (mgr ServerManager) DeleteServer(id uint) {
+	mgr.Db.Where("ID = ?", id).Delete(&Server{})
+}
+
+func (mgr ServerManager) UpdateServer(server *Server) {
+	mgr.Db.Update(server)
+}
+
+func (mgr ServerManager) GetServerByAddr(addr string) Server {
+	server := Server{}
+	mgr.Db.Where("addr = ?", addr).First(&server)
+	return server
+}
+
+// SearchServers searches all tags, and retrurns *limit* servers, with an offset of *offset*
+func (mgr ServerManager) SearchServers(term string, offset int, limit int) []Server {
+	tags := []Tag{}
+	servers := []Server{}
+
+	// we want to search for all tags which are similar to the term, and then find the assoicated servers
+	mgr.Db.Model(&Tag{}).Where("similarity(tags.value, ?) > 0.2", term).Offset(offset).Limit(limit).Find(&tags)
+	mgr.Db.Model(&tags).Related(&servers, "Servers")
+	return servers
+}
+
 // AddServerTags creates non-existant server tags and adds existing or non-existing tags to some server
 func (mgr ServerManager) AddServerTags(server Server, tagsS []string) error {
 	var tags []Tag
@@ -63,30 +88,10 @@ func (mgr ServerManager) AddServerTags(server Server, tagsS []string) error {
 	return nil
 }
 
-func (mgr ServerManager) DeleteServer(id uint) {
-	mgr.Db.Where("ID = ?", id).Delete(&Server{})
-}
-
-func (mgr ServerManager) UpdateServer(server *Server) {
-	mgr.Db.Update(server)
-}
-
-func (mgr ServerManager) GetServerByAddr(addr string) Server {
-	server := Server{}
-	mgr.Db.Where("addr = ?", addr).First(&server)
-	return server
-}
-
-func (mgr ServerManager) SearchServers(term string, offset int, limit int) []Server {
-	tags := []Tag{}
-	servers := []Server{}
-
-	// we want to search for all tags which are similar to the term, and then find the assoicated servers
-	mgr.Db.Model(&Tag{}).Where("similarity(tags.value, ?) > 0.2", term).Offset(offset).Limit(limit).Find(&tags)
-	mgr.Db.Model(&tags).Related(&servers, "Servers")
-	return servers
-}
-
 func (s Server) String() string {
 	return fmt.Sprintf("Server<(%d) %s --> %s>", s.ID, s.Addr, s.Nick)
+}
+
+func (t Tag) String() string {
+	return fmt.Sprintf("Tag<%s>", t.Value)
 }
