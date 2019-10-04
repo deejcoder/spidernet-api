@@ -5,7 +5,7 @@ app_short_name: SN
 
 api:
   usingHttps: false
-  port: 8080
+  port: 8081
   allowed_methods:
     - GET
     - POST
@@ -15,12 +15,14 @@ api:
     - "*"
 
 database:
-  host: 127.0.0.1:5432
+  host: 127.0.0.1
+  port: 52602
   user: spidernet
   password: spidernet
   database: spidernet
   sslmode: disable
   
 secrets:
-  csrf: some-256-bit-secret-key
-  jwtsecret: another-256-bit-secret-key
+  csrf: some-secret-256-bit-key
+  jwtsecret: another-secret-256-bit-key
+  api_login: some-secret-api-login-for-development
