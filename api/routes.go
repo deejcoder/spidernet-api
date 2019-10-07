@@ -37,5 +37,6 @@ func defineRoutes() []Route {
 		{Path: "/", Handler: helpers.RequireAuth(handlers.Index), Methods: "GET"},
 		{Path: "/token/", Handler: handlers.Authenticate, Methods: "POST"},
 		{Path: "/token/validate", Handler: handlers.Validate, Methods: "GET"},
+		{Path: "/servers/search", Handler: handlers.SearchServers, Methods: "GET"},
 	}
 }

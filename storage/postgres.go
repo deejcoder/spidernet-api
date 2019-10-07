@@ -37,9 +37,11 @@ func (instance *PostgresInstance) Connect() error {
 		return err
 	}
 
+	// set the db
+	instance.Db = db
+
 	// setup extensions, auto migrations etc.
 	instance.OnConnect()
-	instance.Db = db
 	return nil
 }
 

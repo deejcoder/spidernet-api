@@ -23,7 +23,7 @@ func TestServerSchema(t *testing.T) {
 	mgr := NewServerManager(pi.Db)
 
 	// create some server, should return an error if one already exists
-	server, err := mgr.CreateServer("192.168.1.4", "Heroes & Generals")
+	server, err := mgr.CreateServer("192.168.1.5", "Heroes & Generals")
 	if err != nil {
 		logrus.Trace(err)
 	}
@@ -40,10 +40,14 @@ func TestServerSchema(t *testing.T) {
 	}
 
 	// finally search the servers for the new server
-	servers := mgr.SearchServers("deb", 0, 10)
+	servers, err := mgr.SearchServers("deb", 0, 10)
+	if err != nil {
+		logrus.Fatal(err)
+	}
+
 	for _, server := range servers {
 		logrus.Info(server)
-		if server.Addr == mgr.GetServerByAddr("192.168.1.4").Addr {
+		if server.Addr == mgr.GetServerByAddr("192.168.1.5").Addr {
 
 			// finally delete the server, and we're done
 			mgr.DeleteServer(server.ID)

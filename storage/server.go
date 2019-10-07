@@ -2,6 +2,7 @@ package storage
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/jinzhu/gorm"
 )
@@ -11,18 +12,21 @@ type ServerManager struct {
 }
 
 type Server struct {
-	gorm.Model
-	Addr      string `gorm:"unique; not null"`
-	Nick      string `gorm:"unique; not null"`
-	VotesUp   int    `gorm:"default:0"`
-	VotesDown int    `gorm:"default:0"`
-	Tags      []*Tag `gorm:"many2many:server_tags;"`
+	ID        uint      `gorm:"primary_key" json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	DeletedAt time.Time `json:"-"`
+	Addr      string    `gorm:"unique; not null" json:"addr"`
+	Nick      string    `gorm:"unique; not null" json:"nick"`
+	VotesUp   int       `gorm:"default:0" json:"votes_up"`
+	VotesDown int       `gorm:"default:0" json:"votes_down"`
+	Tags      []Tag     `gorm:"many2many:server_tags;" json:"tags"`
 }
 
 type Tag struct {
-	gorm.Model
-	Value   string    `gorm:"unique;not null"`
-	Servers []*Server `gorm:"many2many:server_tags;"`
+	gorm.Model `json:"-"`
+	Value      string    `gorm:"unique;not null" json:"value"`
+	Servers    []*Server `gorm:"many2many:server_tags;" json:"-"`
 }
 
 func NewServerManager(db *gorm.DB) *ServerManager {
@@ -59,13 +63,31 @@ func (mgr ServerManager) GetServerByAddr(addr string) Server {
 }
 
 // SearchServers searches all tags, and retrurns *limit* servers, with an offset of *offset*
-func (mgr ServerManager) SearchServers(term string, offset int, limit int) []Server {
+func (mgr ServerManager) SearchServers(term string, offset int, limit int) ([]Server, error) {
 	tags := []Tag{}
 	servers := []Server{}
 
-	// we want to search for all tags which are similar to the term, and then find the assoicated servers
-	mgr.Db.Model(&Tag{}).Where("similarity(tags.value, ?) > 0.2", term).Offset(offset).Limit(limit).Find(&tags)
-	mgr.Db.Model(&tags).Related(&servers, "Servers")
+	// search all tags that are similar to term
+	mgr.Db.Model(&Tag{}).
+		Where("similarity(tags.value, ?) > 0.2", term).
+		Offset(offset).
+		Limit(limit).
+		Find(&tags)
+
+	// find assoicated servers & load the Tags into Server.Tags field
+	mgr.Db.Model(&tags).
+		Preload("Tags").
+		Related(&servers, "Servers")
+
+	if err := mgr.Db.Error; err != nil {
+		return nil, err
+	}
+	return servers, nil
+}
+
+func (mgr ServerManager) GetServers(offset int, limit int) []Server {
+	servers := []Server{}
+	mgr.Db.Offset(offset).Limit(limit).Find(&servers)
 	return servers
 }
 
