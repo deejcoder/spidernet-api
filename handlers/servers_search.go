@@ -1,3 +1,9 @@
+/*
+SearchServers accepts three params: term, start & size
+the TERM will search all tags, servers with similar tags will then be returned.
+There will be a total of SIZE servers returned, starting at START
+*/
+
 package handlers
 
 import (

@@ -50,7 +50,10 @@ func TestServerSchema(t *testing.T) {
 		if server.Addr == mgr.GetServerByAddr("192.168.1.5").Addr {
 
 			// finally delete the server, and we're done
-			mgr.DeleteServer(server.ID)
+			err := mgr.DeleteServer(server.ID)
+			if err != nil {
+				logrus.Fatal(err)
+			}
 			return
 		}
 	}

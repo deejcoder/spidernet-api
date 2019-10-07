@@ -37,6 +37,10 @@ func defineRoutes() []Route {
 		{Path: "/", Handler: helpers.RequireAuth(handlers.Index), Methods: "GET"},
 		{Path: "/token/", Handler: handlers.Authenticate, Methods: "POST"},
 		{Path: "/token/validate", Handler: handlers.Validate, Methods: "GET"},
+		{Path: "/servers/", Handler: handlers.GetServers, Methods: "GET"},
 		{Path: "/servers/search", Handler: handlers.SearchServers, Methods: "GET"},
+		{Path: "/servers/create", Handler: handlers.CreateServer, Methods: "PUT"},
+		{Path: "/servers/delete", Handler: handlers.DeleteServer, Methods: "DELETE"},
+		{Path: "/servers/update", Handler: handlers.UpdateServer, Methods: "POST"},
 	}
 }

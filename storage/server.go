@@ -48,12 +48,20 @@ func (mgr ServerManager) CreateServer(host string, nick string) (Server, error) 
 	return server, nil
 }
 
-func (mgr ServerManager) DeleteServer(id uint) {
+func (mgr ServerManager) DeleteServer(id uint) error {
 	mgr.Db.Where("ID = ?", id).Delete(&Server{})
+	if err := mgr.Db.Error; err != nil {
+		return err
+	}
+	return nil
 }
 
-func (mgr ServerManager) UpdateServer(server *Server) {
+func (mgr ServerManager) UpdateServer(server *Server) error {
 	mgr.Db.Update(server)
+	if err := mgr.Db.Error; err != nil {
+		return err
+	}
+	return nil
 }
 
 func (mgr ServerManager) GetServerByAddr(addr string) Server {
@@ -87,7 +95,7 @@ func (mgr ServerManager) SearchServers(term string, offset int, limit int) ([]Se
 
 func (mgr ServerManager) GetServers(offset int, limit int) []Server {
 	servers := []Server{}
-	mgr.Db.Offset(offset).Limit(limit).Find(&servers)
+	mgr.Db.Model(&Server{}).Offset(offset).Limit(limit).Find(&servers)
 	return servers
 }
 
