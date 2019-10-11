@@ -35,8 +35,8 @@ func BuildRouter() *mux.Router {
 func defineRoutes() []Route {
 	return []Route{
 		{Path: "/", Handler: helpers.RequireAuth(handlers.Index), Methods: "GET"},
-		{Path: "/token/", Handler: handlers.Authenticate, Methods: "POST"},
-		{Path: "/token/validate", Handler: handlers.Validate, Methods: "GET"},
+		{Path: "/auth/login", Handler: handlers.LoginUser, Methods: "POST"},
+		{Path: "/auth/validate", Handler: handlers.ValidateUser, Methods: "GET"},
 		{Path: "/servers/", Handler: handlers.GetServers, Methods: "GET"},
 		{Path: "/servers/search", Handler: handlers.SearchServers, Methods: "GET"},
 		{Path: "/servers/create", Handler: handlers.CreateServer, Methods: "PUT"},
