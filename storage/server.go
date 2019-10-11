@@ -15,12 +15,11 @@ type Server struct {
 	ID        uint      `gorm:"primary_key" json:"id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
-	DeletedAt time.Time `json:"-"`
 	Addr      string    `gorm:"unique; not null" json:"addr"`
 	Nick      string    `gorm:"unique; not null" json:"nick"`
 	VotesUp   int       `gorm:"default:0" json:"votes_up"`
 	VotesDown int       `gorm:"default:0" json:"votes_down"`
-	Tags      []Tag     `gorm:"many2many:server_tags;" json:"tags"`
+	Tags      []*Tag    `gorm:"many2many:server_tags;" json:"tags"`
 }
 
 type Tag struct {
@@ -119,7 +118,7 @@ func (mgr ServerManager) AddServerTags(server Server, tagsS []string) error {
 }
 
 func (s Server) String() string {
-	return fmt.Sprintf("Server<(%d) %s --> %s>", s.ID, s.Addr, s.Nick)
+	return fmt.Sprintf("Server<(%d) addr: %s, nick: %s>", s.ID, s.Addr, s.Nick)
 }
 
 func (t Tag) String() string {

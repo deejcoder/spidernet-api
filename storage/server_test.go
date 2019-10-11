@@ -22,10 +22,11 @@ func TestServerSchema(t *testing.T) {
 	_, pi := setup()
 	mgr := NewServerManager(pi.Db)
 
+	//
 	// create some server, should return an error if one already exists
 	server, err := mgr.CreateServer("192.168.1.5", "Heroes & Generals")
 	if err != nil {
-		logrus.Trace(err)
+		logrus.Fatal(err)
 	}
 
 	// create some tags for the server
@@ -36,7 +37,7 @@ func TestServerSchema(t *testing.T) {
 	}
 	err = mgr.AddServerTags(server, tags)
 	if err != nil {
-		logrus.Trace(err)
+		logrus.Fatal(err)
 	}
 
 	// finally search the servers for the new server

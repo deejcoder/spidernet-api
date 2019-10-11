@@ -46,7 +46,7 @@ func (instance *PostgresInstance) Connect() error {
 }
 
 func (instance *PostgresInstance) OnConnect() {
-	instance.Db.AutoMigrate(&Server{}, &Tag{})
+	instance.Db.AutoMigrate(&Server{}, &Tag{}, &User{})
 
 	// try add pg_trgm extension if it doesn't exist
 	out := instance.Db.Exec("CREATE EXTENSION IF NOT EXISTS pg_trgm;")
